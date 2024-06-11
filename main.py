@@ -13,9 +13,9 @@ logging.basicConfig(level=logging.INFO)
 
 ### Setup values start
 
-GUILD_ID = 966586000417619998 # for emojis
+GUILD_ID = 1181527598279442472 # for emojis
 CATS_GUILD_ID = False # alternative guild purely for cattype emojis (use for christmas/halloween etc), False to disable
-BACKUP_ID = 1060545763194707998 # channel id for db backups, private extremely recommended
+BACKUP_ID = 1249936634254983200 # channel id for db backups, private extremely recommended
 
 # discord bot token, use os.environ for more security
 TOKEN = os.environ['token']
@@ -31,7 +31,7 @@ TOP_GG_TOKEN = os.environ["top_gg_token"]
 
 # this will automatically restart the bot if message in GITHUB_CHANNEL_ID is sent, you can use a github webhook for that
 # set to False to disable
-GITHUB_CHANNEL_ID = 1060965767044149249
+GITHUB_CHANNEL_ID = 1249938925208993939
 
 # all messages in this channel will be interpreted as user ids to give premium access to
 # set to False to disable
@@ -60,27 +60,33 @@ NONOWORDS = [base64.b64decode(i).decode('utf-8') for i in ["bmlja2E=", "bmlja2Vy
 
 type_dict = {
     "Fine": 1000,
-    "Nice": 750,
-    "Good": 500,
-    "Rare": 350,
-    "Wild": 275,
-    "Baby": 230,
-    "Epic": 200,
-    "Sus": 175,
-    "Brave": 150,
-    "Rickroll": 125,
-    "Reverse": 100,
-    "Superior": 80,
-    "TheTrashCell": 50,
-    "Legendary": 35,
-    "Mythic": 25,
-    "8bit": 20,
-    "Corrupt": 15,
-    "Professor": 10,
-    "Divine": 8,
-    "Real": 5,
-    "Ultimate": 3,
-    "eGirl": 2
+    "Nice": 850,
+    "Good": 550,
+    "Rare": 400,
+    "Wild": 325,
+    "Baby": 280,
+    "Epic": 250,
+    "Sus": 225,
+    "Silly": 200,
+    "Brave": 199,
+    "Rickroll": 175,
+    "Reverse": 150,
+    "Superior": 100,
+    "TheTrashCell": 80,
+    "Legendary": 60,
+    "Mythic": 45,
+    "8bit": 40,
+    "Corrupt": 35,
+    "Professor": 30,
+    "Divine": 25,
+    "Real": 20,
+    "Ultimate": 11,
+    "Gordon": 10,
+    "Klombadrov": 7,
+    "Florbelglip": 6,
+    "Sacredturt": 5,
+    "eGirl": 2,
+    "Thumb": 1, 
 }
 
 # create a huge list where each cat type is multipled the needed amount of times
