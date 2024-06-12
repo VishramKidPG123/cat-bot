@@ -787,10 +787,10 @@ async def on_message(message):
                     add_cat(message.guild.id, message.author.id, "cataine_active", 0, True)
                     suffix_string = f"\nyour cataine buff has expired. you know where to get a new one 😏"
 
-                elif randint(0, 7) == 0:
+                '''elif randint(0, 7) == 0:
                     # shill donating
                     add_cat(message.guild.id, message.author.id, "cataine_active", 0, True)
-                    suffix_string += f"\n👑 donate to cat bot and get cool perks: </donate:{DONATE_ID}>"
+                    suffix_string += f"\n👑 donate to cat bot and get cool perks: </donate:{DONATE_ID}>"'''
                 
                 if db[str(message.guild.id)]["cought"]:
                     coughstring = db[str(message.guild.id)]["cought"]
@@ -1449,7 +1449,7 @@ async def inventory(message: discord.Interaction, person_id: Optional[discord.Us
 @bot.tree.command(description="Support Cat Bot!")
 async def donate(message: discord.Interaction):
     thing = discord.File("supporter.png", filename="supporter.png")
-    await message.response.send_message("👑 For as little as $3 you can support Cat Bot and unlock profile customization!\n<https://catbot.minkos.lol/donate>", file=thing)
+    await message.response.send_message("donating won't work because this is not the main cat-bot.", file=thing) # "👑 For as little as $3 you can support Cat Bot and unlock profile customization!\n<https://catbot.minkos.lol/donate>", file=thing)
 
 @bot.tree.command(description="[SUPPORTER] Customize your profile!")
 @discord.app_commands.rename(provided_emoji='emoji')
