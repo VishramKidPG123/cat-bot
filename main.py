@@ -23,11 +23,11 @@ TOKEN = os.environ['token']
 
 # top.gg voting key
 # set to False to disable
-WEBHOOK_VERIFY = os.environ["webhook_verify"]
+WEBHOOK_VERIFY = False
 
 # top.gg api token because they use ancient technology and you need to post server count manually smh
 # set to False to disable
-TOP_GG_TOKEN = os.environ["top_gg_token"]
+TOP_GG_TOKEN = False
 
 # this will automatically restart the bot if message in GITHUB_CHANNEL_ID is sent, you can use a github webhook for that
 # set to False to disable
