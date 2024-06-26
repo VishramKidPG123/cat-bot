@@ -640,6 +640,7 @@ async def on_message(message):
             const_perc = len(text) / (len(text) - total_vow)
         if (vow_perc <= 3 and const_perc >= 6) or total_illegal >= 2:
             # await message.add_reaction(get_emoji("staring_cat"))
+            pass
     
     if "robotop" in message.author.name.lower() and "i rate **cat" in message.content.lower():
         icon = str(get_emoji("no_cat_throphy")) + " "
@@ -680,6 +681,7 @@ async def on_message(message):
         (resp[1] == "re" and re.seach(resp[0], text.lower())) or \
         (resp[1] == "exact" and resp[0] == text.lower()) or \
         (resp[1] == "in" and resp[0] in text.lower()):
+            pass
             # await message.reply(resp[2])
         
     # if message.author in message.mentions: await message.add_reaction(get_emoji("staring_cat"))
