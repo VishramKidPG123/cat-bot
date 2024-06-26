@@ -734,6 +734,7 @@ async def on_message(message):
             icon = get_emoji("pointlaugh")
             try:
                 #await message.add_reaction(icon)
+                pass
             except Exception:
                 pass
         elif is_cat:
