@@ -2868,12 +2868,20 @@ async def trade(message: discord.Interaction, person_id: discord.User):
         await achemb(message, "introvert", "send")
 
 
-@bot.tree.command()
+@bot.tree.command(description="See who has a certain type of cat")
 @discord.app_commands.rename(cat_type="type")
 @discord.app_commands.describe(cat_type="im gonna airstrike your house from orbit", amount="And how much?")
-@discord.app_commands.autocomplete(cat_type=gift_autocomplete)
-async def whohas(message: discord.Interaction, person: discord.User, cat_type: str, amount: Optional[int]):
-
+@discord.app_commands.autocomplete(cat_type=cat_type_autocomplete)
+async def whohas(message: discord.Interaction, cat_type: str, amount: Optional[int] = 1):
+    if cat_type not in cattypes or amount < 1:
+        await message.response.send_message("bro what", ephemeral=True)
+        return
+    people = Profile.select().where((Profile.guild_id == message.guild.id) & (getattr(Profile, f"cat_{cat_type}") >= amount)).execute()
+    if len(people) == 0:
+        pass #there is nobody (I need to add stuff here)
+    embed = discord.Embed(title = f"Who has{f" {amount}x" if amount != 1 else ""} {cat_type} Cat")
+    embed.add_field(name = "", value="\n".join([f"<@{i.user_id}>, {i[f"cat_{cat_type}"]}x" for i in people]))
+    await message.response.send_message(embed=embed)
 
 @bot.tree.command(description="Get Cat Image, does not add a cat to your inventory")
 @discord.app_commands.rename(cat_type="type")
