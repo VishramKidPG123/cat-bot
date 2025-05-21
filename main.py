@@ -75,6 +75,11 @@ type_dict = {
     "eGirl": 2,
 }
 
+# create a huge list where each cat type is multipled the needed amount of times
+CAT_TYPES = []
+for k, v in type_dict.items():
+    CAT_TYPES.extend([k] * v)
+
 # this list stores unique non-duplicate cattypes
 cattypes = list(type_dict.keys())
 
@@ -82,7 +87,7 @@ cattypes = list(type_dict.keys())
 cattype_lc_dict = {i.lower(): i for i in cattypes}
 
 allowedemojis = []
-for i in cattypes:
+for i in type_dict.keys():
     allowedemojis.append(i.lower() + "cat")
 
 pack_data = [
@@ -350,34 +355,35 @@ async def send_news(interaction: discord.Interaction):
     profile, _ = await Profile.get_or_create(guild_id=interaction.guild.id, user_id=interaction.user.id)
     await progress(interaction, profile, "news")
 
-    if news_id == 0:
-        embed = discord.Embed(
-            title="📜 Cat Bot Survey",
-            description="Hello and welcome to The Cat Bot Times:tm:! I kind of want to learn more about your time with Cat Bot because I barely know about it lmao. This should only take a couple of minutes.\n\nGood high-quality responses will win FREE cat rain prizes.\n\nSurvey is closed!",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
-    elif news_id == 1:
-        embed = discord.Embed(
-            title="✨ New Cat Rains perks!",
-            description="Hey there! Buying Cat Rains now gives you access to `/editprofile` command! You can add an image, change profile color, and add an emoji next to your name. Additionally, you will now get a special role in our [discord server](https://discord.gg/staring).\nEveryone who ever bought rains and all future buyers will get it.\nAnyone who bought these abilities separately in the past (known as 'Cat Bot Supporter') have received 10 minutes of Rains as compensation.\n\nThis is a really cool perk and I hope you like it!",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
-    elif news_id == 2:
-        embed = discord.Embed(
-            title="☃️ Cat Bot Christmas",
-            description=f"🎅 **Christmas Sale**\nFor the next 15 days (until January 1st) all items on [the Cat Bot Store](<https://catbot.shop/>) will be **-20%** off! Go buy something :exploding_head:\n\n⚡ **Cat Bot Wrapped 2024**\nIn 2024 Cat Bot got...\n- 🖥️ *45777* new servers!\n- 👋 *286607* new profiles!\n- {get_emoji('staring_cat')} okay so funny story due to the new 2.1 billion per cattype limit i added a few months ago 4 with 832 zeros cats were deleted... oopsie... there are currently *64105220101255* cats among the entire bot rn though\n- {get_emoji('cat_throphy')} *1518096* achievements get!\nSee last year's Wrapped [here](<https://discord.com/channels/966586000417619998/1021844042654417017/1188573593408385074>).\n\n❓ **New Year Update**\nSomething is coming...",
-            color=0x6E593C,
-        )
-        view = discord.ui.View(timeout=1)
-        button = discord.ui.Button(label="Cat Bot Store", url="https://catbot.shop")
-        view.add_item(button)
-        await interaction.edit_original_response(content=None, embed=embed, view=view)
-    elif news_id == 3:
-        embed = discord.Embed(
-            title="Battlepass is getting an update!",
-            description="""## qhar?
+    match news_id:
+        case 0:
+            embed = discord.Embed(
+                title="📜 Cat Bot Survey",
+                description="Hello and welcome to The Cat Bot Times:tm:! I kind of want to learn more about your time with Cat Bot because I barely know about it lmao. This should only take a couple of minutes.\n\nGood high-quality responses will win FREE cat rain prizes.\n\nSurvey is closed!",
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
+        case 1:
+            embed = discord.Embed(
+                title="✨ New Cat Rains perks!",
+                description="Hey there! Buying Cat Rains now gives you access to `/editprofile` command! You can add an image, change profile color, and add an emoji next to your name. Additionally, you will now get a special role in our [discord server](https://discord.gg/staring).\nEveryone who ever bought rains and all future buyers will get it.\nAnyone who bought these abilities separately in the past (known as 'Cat Bot Supporter') have received 10 minutes of Rains as compensation.\n\nThis is a really cool perk and I hope you like it!",
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
+        case 2:
+            embed = discord.Embed(
+                title="☃️ Cat Bot Christmas",
+                description=f"🎅 **Christmas Sale**\nFor the next 15 days (until January 1st) all items on [the Cat Bot Store](<https://catbot.shop/>) will be **-20%** off! Go buy something :exploding_head:\n\n⚡ **Cat Bot Wrapped 2024**\nIn 2024 Cat Bot got...\n- 🖥️ *45777* new servers!\n- 👋 *286607* new profiles!\n- {get_emoji('staring_cat')} okay so funny story due to the new 2.1 billion per cattype limit i added a few months ago 4 with 832 zeros cats were deleted... oopsie... there are currently *64105220101255* cats among the entire bot rn though\n- {get_emoji('cat_throphy')} *1518096* achievements get!\nSee last year's Wrapped [here](<https://discord.com/channels/966586000417619998/1021844042654417017/1188573593408385074>).\n\n❓ **New Year Update**\nSomething is coming...",
+                color=0x6E593C,
+            )
+            view = discord.ui.View(timeout=1)
+            button = discord.ui.Button(label="Cat Bot Store", url="https://catbot.shop")
+            view.add_item(button)
+            await interaction.edit_original_response(content=None, embed=embed, view=view)
+        case 3:
+            embed = discord.Embed(
+                title="Battlepass is getting an update!",
+                description="""## qhar?
 - Huge stuff!
 - Battlepass will now reset every month
 - You will have 3 quests, including voting
@@ -395,13 +401,13 @@ There are currently no plans to sell a paid battlepass.
 
 ## christmas sale
 That's not a question, but it does end in less than 24 hours so don't [miss your opportunity](<https://catbot.shop>).""",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
-    elif news_id == 4:
-        embed = discord.Embed(
-            title="Packs!",
-            description=f"""⬆️ __season 2 has concluded!__
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
+        case 4:
+            embed = discord.Embed(
+                title="Packs!",
+                description=f"""⬆️ __season 2 has concluded!__
 some fun stats:
 - 214k levels complete
 - 43k people completed atleast a single level
@@ -419,13 +425,13 @@ instead of predetermined cat rewards you now unlock Packs! packs have different 
 the rarities are - Wooden {get_emoji("woodenpack")}, Stone {get_emoji("stonepack")}, Bronze {get_emoji("bronzepack")}, Silver {get_emoji("silverpack")}, Gold {get_emoji("goldpack")}, Platinum {get_emoji("platinumpack")}, Diamond {get_emoji("diamondpack")} and Celestial {get_emoji("celestialpack")}!
 the extra reward is now a stone pack instead of 5 random cats too!
 *LETS GO GAMBLING*""",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
-    elif news_id == 5:
-        embed = discord.Embed(
-            title="Important Message from CEO of Cat Bot",
-            description="""Dear Cat Bot users,
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
+        case 5:
+            embed = discord.Embed(
+                title="Important Message from CEO of Cat Bot",
+                description="""Dear Cat Bot users,
 
 I hope this message finds you well. I want to take a moment to address some recent developments within our organization that are crucial for our continued success.
 
@@ -437,13 +443,13 @@ We are committed to resolving these challenges and aim to have everything back o
 
 Best regards,
 [Your Name]""",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
-    elif news_id == 6:
-        embed = discord.Embed(
-            title="🥳 Cat Bot Turns 3",
-            description="""today is a special day for cat bot! april 21st is its birthday, and this year its turning three!
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
+        case 6:
+            embed = discord.Embed(
+                title="🥳 Cat Bot Turns 3",
+                description="""today is a special day for cat bot! april 21st is its birthday, and this year its turning three!
 to celebrate, we will be doing the biggest sale yet! -50% off for the next 5 days at our [store](https://catbot.shop)
 happy birthda~~
 ...
@@ -451,9 +457,9 @@ hold on...
 im recieving some news cats are starting to get caught with puzzle pieces in their teeth!
 the puzzle pieces say something about running `/event` on their back and that you might need to reload your discord to see it
 how considerate!""",
-            color=0x6E593C,
-        )
-        await interaction.edit_original_response(content=None, view=None, embed=embed)
+                color=0x6E593C,
+            )
+            await interaction.edit_original_response(content=None, view=None, embed=embed)
 
 
 # this is some common code which is run whether someone gets an achievement
@@ -520,14 +526,15 @@ async def achemb(message, ach_id, send_type, author_string=None):
         result = None
         perms: discord.Permissions = message.channel.permissions_for(message.guild.me)
         correct_perms = perms.send_messages and (not isinstance(message.channel, discord.Thread) or perms.send_messages_in_threads)
-        if send_type == "reply" and correct_perms:
-            result = await message.reply(embed=embed)
-        elif send_type == "send" and correct_perms:
-            result = await message.channel.send(embed=embed)
-        elif send_type == "followup":
-            result = await message.followup.send(embed=embed, ephemeral=True)
-        elif send_type == "response":
-            result = await message.response.send_message(embed=embed)
+        match send_type:
+            case "reply" if correct_perms:
+                result = await message.reply(embed=embed)
+            case "send" if correct_perms:
+                result = await message.channel.send(embed=embed)
+            case "followup":
+                result = await message.followup.send(embed=embed, ephemeral=True)
+            case "response":
+                result = await message.response.send_message(embed=embed)
         await progress(message, profile, "achievement")
         await finale(message, profile)
     except Exception:
@@ -547,41 +554,44 @@ async def achemb(message, ach_id, send_type, author_string=None):
 async def generate_quest(user: Profile, quest_type: str):
     while True:
         quest = random.choice(list(battle["quests"][quest_type].keys()))
-        if quest in ["slots", "reminder"]:
-            # removed quests
-            continue
-        elif quest == "prism":
-            total_count = await Prism.filter(guild_id=user.guild_id).count()
-            user_count = await Prism.filter(guild_id=user.guild_id, user_id=user.user_id).count()
-            global_boost = 0.06 * math.log(2 * total_count + 1)
-            prism_boost = global_boost + 0.03 * math.log(2 * user_count + 1)
-            if prism_boost < 0.15:
+        match quest:
+            case "slots" | "reminder":
+                # removed quests
                 continue
-        elif quest == "news":
-            global_user, _ = await User.get_or_create(user_id=user.user_id)
-            if len(news_list) <= len(global_user.news_state.strip()) and "0" not in global_user.news_state.strip()[-4:]:
-                continue
-        elif quest == "achievement":
-            unlocked = 0
-            for k in ach_names:
-                if user[k] and ach_list[k]["category"] != "Hidden":
-                    unlocked += 1
-            if unlocked > 30:
-                continue
+            case "prism":
+                total_count = await Prism.filter(guild_id=user.guild_id).count()
+                user_count = await Prism.filter(guild_id=user.guild_id, user_id=user.user_id).count()
+                global_boost = 0.06 * math.log(2 * total_count + 1)
+                prism_boost = global_boost + 0.03 * math.log(2 * user_count + 1)
+                if prism_boost < 0.15:
+                    continue
+            case "news":
+                global_user, _ = await User.get_or_create(user_id=user.user_id)
+                if len(news_list) <= len(global_user.news_state.strip()) and "0" not in global_user.news_state.strip()[-4:]:
+                    continue
+            case "achievement":
+                unlocked = 0
+                for k in ach_names:
+                    if user[k] and ach_list[k]["category"] != "Hidden":
+                        unlocked += 1
+                if unlocked > 30:
+                    continue
         break
 
     quest_data = battle["quests"][quest_type][quest]
-    if quest_type == "vote":
-        user.vote_reward = random.randint(quest_data["xp_min"] // 10, quest_data["xp_max"] // 10) * 10
-        user.vote_cooldown = 0
-    elif quest_type == "catch":
-        user.catch_reward = random.randint(quest_data["xp_min"] // 10, quest_data["xp_max"] // 10) * 10
-        user.catch_quest = quest
-        user.catch_cooldown = 0
-    elif quest_type == "misc":
-        user.misc_reward = random.randint(quest_data["xp_min"] // 10, quest_data["xp_max"] // 10) * 10
-        user.misc_quest = quest
-        user.misc_cooldown = 0
+    reward = random.randint(quest_data["xp_min"] // 10, quest_data["xp_max"] // 10) * 10
+    match quest_type:
+        case "vote":
+            user.vote_reward = reward
+            user.vote_cooldown = 0
+        case "catch":
+            user.catch_reward = reward
+            user.catch_quest = quest
+            user.catch_cooldown = 0
+        case "misc":
+            user.misc_reward = reward
+            user.misc_quest = quest
+            user.misc_cooldown = 0
     await user.save()
 
 
@@ -625,48 +635,49 @@ async def progress(message: discord.Message | discord.Interaction, user: Profile
 
     # progress
     quest_complete = False
-    if user.catch_quest == quest:
-        if user.catch_cooldown != 0:
-            return
-        quest_data = battle["quests"]["catch"][quest]
-        user.catch_progress += 1
-        if user.catch_progress >= quest_data["progress"]:
+    match quest:
+        case user.catch_quest:
+            if user.catch_cooldown != 0:
+                return
+            quest_data = battle["quests"]["catch"][quest]
+            user.catch_progress += 1
+            if user.catch_progress >= quest_data["progress"]:
+                quest_complete = True
+                user.catch_cooldown = int(time.time())
+                current_xp = user.progress + user.catch_reward
+                user.catch_progress = 0
+                user.reminder_catch = 1
+        case "vote":
+            if user.vote_cooldown != 0:
+                return
+            quest_data = battle["quests"]["vote"][quest]
+            global_user, _ = await User.get_or_create(user_id=user.user_id)
+            user.vote_cooldown = global_user.vote_time_topgg
+
+            # Weekdays 0 Mon - 6 Sun
+            # double vote xp rewards if Friday, Saturday or Sunday
+            voted_at = datetime.datetime.utcfromtimestamp(global_user.vote_time_topgg)
+            if voted_at.weekday() >= 4:
+                user.vote_reward *= 2
+
+            if global_user.vote_streak % 5 == 0 and global_user.vote_streak not in [0, 5]:
+                user.pack_gold += 1
+
+            current_xp = user.progress + user.vote_reward
             quest_complete = True
-            user.catch_cooldown = int(time.time())
-            current_xp = user.progress + user.catch_reward
-            user.catch_progress = 0
-            user.reminder_catch = 1
-    elif quest == "vote":
-        if user.vote_cooldown != 0:
+        case user.misc_quest:
+            if user.misc_cooldown != 0:
+                return
+            quest_data = battle["quests"]["misc"][quest]
+            user.misc_progress += 1
+            if user.misc_progress >= quest_data["progress"]:
+                quest_complete = True
+                user.misc_cooldown = int(time.time())
+                current_xp = user.progress + user.misc_reward
+                user.misc_progress = 0
+                user.reminder_misc = 1
+        case _:
             return
-        quest_data = battle["quests"]["vote"][quest]
-        global_user, _ = await User.get_or_create(user_id=user.user_id)
-        user.vote_cooldown = global_user.vote_time_topgg
-
-        # Weekdays 0 Mon - 6 Sun
-        # double vote xp rewards if Friday, Saturday or Sunday
-        voted_at = datetime.datetime.utcfromtimestamp(global_user.vote_time_topgg)
-        if voted_at.weekday() >= 4:
-            user.vote_reward *= 2
-
-        if global_user.vote_streak % 5 == 0 and global_user.vote_streak not in [0, 5]:
-            user.pack_gold += 1
-
-        current_xp = user.progress + user.vote_reward
-        quest_complete = True
-    elif user.misc_quest == quest:
-        if user.misc_cooldown != 0:
-            return
-        quest_data = battle["quests"]["misc"][quest]
-        user.misc_progress += 1
-        if user.misc_progress >= quest_data["progress"]:
-            quest_complete = True
-            user.misc_cooldown = int(time.time())
-            current_xp = user.progress + user.misc_reward
-            user.misc_progress = 0
-            user.reminder_misc = 1
-    else:
-        return
 
     await user.save()
     if not quest_complete:
@@ -689,18 +700,19 @@ async def progress(message: discord.Message | discord.Interaction, user: Profile
         user.battlepass += 1
         user.progress = current_xp - level_data["xp"]
         cat_emojis = None
-        if level_data["reward"] == "random cats":
-            cat_emojis = ""
-            for _ in range(5):
-                chosen_cat = random.choices(cattypes, weights=type_dict.values())[0]
-                user[f"cat_{chosen_cat}"] += 1
-                cat_emojis += get_emoji(chosen_cat.lower() + "cat")
-        elif level_data["reward"] in cattypes:
-            user[f"cat_{level_data['reward']}"] += level_data["amount"]
-        elif level_data["reward"] == "Rain":
-            user.rain_minutes += level_data["amount"]
-        else:
-            user[f"pack_{level_data['reward'].lower()}"] += 1
+        match level_data["reward"]:
+            case "random cats":
+                cat_emojis = ""
+                for _ in range(5):
+                    chosen_cat = random.choice(CAT_TYPES)
+                    user[f"cat_{chosen_cat}"] += 1
+                    cat_emojis += get_emoji(chosen_cat.lower() + "cat")
+            case _ if level_data["reward"] in cattypes:
+                user[f"cat_{level_data['reward']}"] += level_data["amount"]
+            case "Rain":
+                user.rain_minutes += level_data["amount"]
+            case _:
+                user[f"pack_{level_data['reward'].lower()}"] += 1
         await user.save()
 
         if perms.send_messages and perms.embed_links and (not isinstance(message.channel, discord.Thread) or perms.send_messages_in_threads):
@@ -950,7 +962,7 @@ async def spawn_cat(ch_id, localcat=None, force_spawn=None):
         return
 
     if not localcat:
-        localcat = random.choices(cattypes, weights=type_dict.values())[0]
+        localcat = random.choice(CAT_TYPES)
     icon = get_emoji(localcat.lower() + "cat")
     file = discord.File(
         f"images/spawn/{localcat.lower()}_cat.png",
@@ -1403,14 +1415,15 @@ async def on_message(message: discord.Message):
         if not user.rain_minutes:
             user.rain_minutes = 0
 
-        if things[2] == "short":
-            user.rain_minutes += 2
-        elif things[2] == "medium":
-            user.rain_minutes += 10
-        elif things[2] == "long":
-            user.rain_minutes += 20
-        else:
-            user.rain_minutes += int(things[2])
+        match things[2]:
+            case "short":
+                user.rain_minutes += 2
+            case "medium":
+                user.rain_minutes += 10
+            case "long":
+                user.rain_minutes += 20
+            case _:
+                user.rain_minutes += int(things[2])
         user.premium = True
         await user.save()
 
@@ -2189,12 +2202,13 @@ async def on_message(message: discord.Message):
                     await progress(message, user, "2fine")
                 if channel.cattype == "Good":
                     await progress(message, user, "good")
-                if time_caught >= 0 and time_caught < 10:
-                    await progress(message, user, "under10")
-                if time_caught >= 0 and int(time_caught) % 2 == 0:
-                    await progress(message, user, "even")
-                if time_caught >= 0 and int(time_caught) % 2 == 1:
-                    await progress(message, user, "odd")
+                if time_caught >= 0 
+                    if time_caught < 10:
+                        await progress(message, user, "under10")
+                    if int(time_caught) % 2 == 0:
+                        await progress(message, user, "even")
+                    if int(time_caught) % 2 == 1:
+                        await progress(message, user, "odd")
                 if channel.cattype and channel.cattype not in ["Fine", "Nice", "Good"]:
                     await progress(message, user, "rare+")
                 if did_boost:
@@ -2252,12 +2266,13 @@ async def on_message(message: discord.Message):
         user, _ = await User.get_or_create(user_id=things[1])
         if not user.rain_minutes:
             user.rain_minutes = 0
-        if things[2] == "short":
-            user.rain_minutes += 2
-        elif things[2] == "medium":
-            user.rain_minutes += 10
-        elif things[2] == "long":
-            user.rain_minutes += 20
+        match things[2]
+            case "short":
+                user.rain_minutes += 2
+            case "medium":
+                user.rain_minutes += 10
+            case "long":
+                user.rain_minutes += 20
         else:
             user.rain_minutes += int(things[2])
         user.premium = True
@@ -2853,11 +2868,11 @@ async def catalogue(message: discord.Interaction):
             in_server = 0
             title = f"{get_emoji('mysterycat')} ???"
 
-        title += f" ({round((type_dict[cat_type] / sum(type_dict.values())) * 100, 2)}%)"
+        title += f" ({round((type_dict[cat_type] / len(CAT_TYPES)) * 100, 2)}%)"
 
         embed.add_field(
             name=title,
-            value=f"{round(sum(type_dict.values()) / type_dict[cat_type], 2)} value\n{in_server:,} in this server",
+            value=f"{round(len(CAT_TYPES) / type_dict[cat_type], 2)} value\n{in_server:,} in this server",
         )
 
     await message.response.send_message(embed=embed)
@@ -3104,7 +3119,7 @@ async def gen_inventory(message, person_id):
             debt = True
         if cat_num != 0:
             total += cat_num
-            valuenum += (sum(type_dict.values()) / type_dict[i]) * cat_num
+            valuenum += (len(CAT_TYPES) / type_dict[i]) * cat_num
             cat_desc += f"{icon} **{i}** {cat_num:,}\n"
         else:
             give_collector = False
@@ -3554,7 +3569,7 @@ async def packs(message: discord.Interaction):
         # select cat type
         goal_value = final_level["value"]
         chosen_type = random.choice(cattypes)
-        pre_cat_amount = goal_value / (sum(type_dict.values()) / type_dict[chosen_type])
+        pre_cat_amount = goal_value / (len(CAT_TYPES) / type_dict[chosen_type])
         if pre_cat_amount % 1 > random.random():
             cat_amount = math.ceil(pre_cat_amount)
         else:
@@ -3648,7 +3663,6 @@ async def battlepass(message: discord.Interaction):
         current_mode = "Main"
         user, _ = await Profile.get_or_create(guild_id=message.guild.id, user_id=message.user.id)
         await refresh_quests(user)
-        user, _ = await Profile.get_or_create(guild_id=message.guild.id, user_id=message.user.id)
 
         global_user, _ = await User.get_or_create(user_id=message.user.id)
         if global_user.vote_time_topgg + 12 * 3600 > time.time():
@@ -4066,13 +4080,14 @@ async def tictactoe(message: discord.Interaction, person: discord.Member):
         view = View(timeout=VIEW_TIMEOUT)
         has_unlocked_tiles = False
         for num, i in enumerate(board_state):
-            if i == "":
-                button = Button(emoji=get_emoji("empty"), custom_id=str(num))
-                has_unlocked_tiles = True
-            elif i == "X":
-                button = Button(emoji="❌", disabled=True)
-            elif i == "O":
-                button = Button(emoji="⭕", disabled=True)
+            match i:
+                case "":
+                    button = Button(emoji=get_emoji("empty"), custom_id=str(num))
+                    has_unlocked_tiles = True
+                case "X":
+                    button = Button(emoji="❌", disabled=True)
+                case "O":
+                    button = Button(emoji="⭕", disabled=True)
 
             button.callback = do_turn
             button.row = num // 3
@@ -4111,12 +4126,13 @@ async def tictactoe(message: discord.Interaction, person: discord.Member):
             if winner:
                 view = View(timeout=1)
                 for num, i in enumerate(board_state):
-                    if i == "":
-                        button = Button(emoji=get_emoji("empty"), disabled=True)
-                    elif i == "X":
-                        button = Button(emoji="❌", disabled=True)
-                    elif i == "O":
-                        button = Button(emoji="⭕", disabled=True)
+                    match i:
+                        case "":
+                            button = Button(emoji=get_emoji("empty"), disabled=True)
+                        case "X":
+                            button = Button(emoji="❌", disabled=True)
+                        case "O":
+                            button = Button(emoji="⭕", disabled=True)
 
                     if check and num in check:
                         button.style = ButtonStyle.green
@@ -4150,12 +4166,13 @@ async def tictactoe(message: discord.Interaction, person: discord.Member):
                 if winner:
                     view = View(timeout=1)
                     for num, i in enumerate(board_state):
-                        if i == "":
-                            button = Button(emoji=get_emoji("empty"), disabled=True)
-                        elif i == "X":
-                            button = Button(emoji="❌", disabled=True)
-                        elif i == "O":
-                            button = Button(emoji="⭕", disabled=True)
+                        match i:
+                            case "":
+                                button = Button(emoji=get_emoji("empty"), disabled=True)
+                            case "X":
+                                button = Button(emoji="❌", disabled=True)
+                            case "O":
+                                button = Button(emoji="⭕", disabled=True)
 
                         if check and num in check:
                             button.style = ButtonStyle.green
@@ -4755,14 +4772,14 @@ async def trade(message: discord.Interaction, person_id: discord.User):
                     # prisms
                     valuestr += f"{get_emoji('prism')} {k}\n"
                     for v2 in type_dict.values():
-                        valuenum += sum(type_dict.values()) / v2
+                        valuenum += len(CAT_TYPES) / v2
                 elif k == "rains":
                     # rains
                     valuestr += f"☔ {v:,}m of Cat Rains\n"
                     valuenum += 900 * v
                 elif k in cattypes:
                     # cats
-                    valuenum += (sum(type_dict.values()) / type_dict[k]) * v
+                    valuenum += (len(CAT_TYPES) / type_dict[k]) * v
                     total += v
                     aicon = get_emoji(k.lower() + "cat")
                     valuestr += f"{aicon} {k} {v:,}\n"
@@ -5930,98 +5947,99 @@ async def leaderboards(
         show_amount = 15
 
         string = ""
-        if type == "Cats":
-            unit = "cats"
+        match type:
+            case "Cats":
+                unit = "cats"
+    
+                if specific_cat != "All":
+                    result = (
+                        await Profile.filter(guild_id=message.guild.id, **{f"cat_{specific_cat}__gt": 0})
+                        .annotate(final_value=Sum(f"cat_{specific_cat}"))
+                        .order_by("-final_value")
+                        .values("user_id", "final_value")
+                    )
+                else:
+                    # dynamically generate sum expression, cast each value to bigint first to handle large totals
+                    cat_columns = [f'CAST("cat_{c}" AS BIGINT)' for c in cattypes if c]
+                    sum_expression = " + ".join(cat_columns)
+                    result = (
+                        await Profile.filter(guild_id=message.guild.id)
+                        .annotate(final_value=RawSQL(sum_expression))
+                        .order_by("-final_value")
+                        .values("user_id", "final_value")
+                    )
 
-            if specific_cat != "All":
-                result = (
-                    await Profile.filter(guild_id=message.guild.id, **{f"cat_{specific_cat}__gt": 0})
-                    .annotate(final_value=Sum(f"cat_{specific_cat}"))
-                    .order_by("-final_value")
-                    .values("user_id", "final_value")
-                )
-            else:
-                # dynamically generate sum expression, cast each value to bigint first to handle large totals
-                cat_columns = [f'CAST("cat_{c}" AS BIGINT)' for c in cattypes if c]
-                sum_expression = " + ".join(cat_columns)
+                    # find rarest
+                    rarest = None
+                    for i in cattypes[::-1]:
+                        non_zero_count = await Profile.filter(guild_id=message.guild.id, **{f"cat_{i}__gt": 0}).values_list("user_id", flat=True)
+                        if len(non_zero_count) != 0:
+                            rarest = i
+                            rarest_holder = non_zero_count
+                            break
+
+                    if rarest and specific_cat != rarest:
+                        catmoji = get_emoji(rarest.lower() + "cat")
+                        rarest_holder = [f"<@{i}>" for i in rarest_holder]
+                        joined = ", ".join(rarest_holder)
+                        if len(rarest_holder) > 10:
+                            joined = f"{len(rarest_holder)} people"
+                        string = f"Rarest cat: {catmoji} ({joined}'s)\n\n"
+            case "Value":
+                unit = "value"
+                sums = []
+                for cat_type in cattypes:
+                    if not cat_type:
+                        continue
+                    weight = len(CAT_TYPES) / type_dict[cat_type]
+                    sums.append(f'({weight}) * "cat_{cat_type}"')
+                total_sum_expr = " + ".join(sums)
                 result = (
                     await Profile.filter(guild_id=message.guild.id)
-                    .annotate(final_value=RawSQL(sum_expression))
+                    .annotate(final_value=RawSQL(total_sum_expr))
                     .order_by("-final_value")
                     .values("user_id", "final_value")
                 )
-
-                # find rarest
-                rarest = None
-                for i in cattypes[::-1]:
-                    non_zero_count = await Profile.filter(guild_id=message.guild.id, **{f"cat_{i}__gt": 0}).values_list("user_id", flat=True)
-                    if len(non_zero_count) != 0:
-                        rarest = i
-                        rarest_holder = non_zero_count
-                        break
-
-                if rarest and specific_cat != rarest:
-                    catmoji = get_emoji(rarest.lower() + "cat")
-                    rarest_holder = [f"<@{i}>" for i in rarest_holder]
-                    joined = ", ".join(rarest_holder)
-                    if len(rarest_holder) > 10:
-                        joined = f"{len(rarest_holder)} people"
-                    string = f"Rarest cat: {catmoji} ({joined}'s)\n\n"
-        elif type == "Value":
-            unit = "value"
-            sums = []
-            for cat_type in cattypes:
-                if not cat_type:
-                    continue
-                weight = sum(type_dict.values()) / type_dict[cat_type]
-                sums.append(f'({weight}) * "cat_{cat_type}"')
-            total_sum_expr = " + ".join(sums)
-            result = (
-                await Profile.filter(guild_id=message.guild.id)
-                .annotate(final_value=RawSQL(total_sum_expr))
-                .order_by("-final_value")
-                .values("user_id", "final_value")
-            )
-        elif type == "Fast":
-            unit = "sec"
-            result = (
-                await Profile.filter(guild_id=message.guild.id, time__lt=99999999999999)
-                .annotate(final_value=Sum("time"))
-                .order_by("final_value")
-                .values("user_id", "final_value")
-            )
-        elif type == "Slow":
-            unit = "h"
-            result = (
-                await Profile.filter(guild_id=message.guild.id, timeslow__gt=0)
-                .annotate(final_value=Sum("timeslow"))
-                .order_by("-final_value")
-                .values("user_id", "final_value")
-            )
-        elif type == "Battlepass":
-            start_date = datetime.datetime(2024, 12, 1)
-            current_date = datetime.datetime.utcnow()
-            full_months_passed = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
-            if current_date.day < start_date.day:
-                full_months_passed -= 1
-            result = (
-                await Profile.filter(guild_id=message.guild.id, season=full_months_passed)
-                .annotate(final_value=Sum("battlepass"))
-                .order_by("-final_value", "progress")
-                .values("user_id", "final_value", "progress")
-            )
-        elif type == "Cookies":
-            unit = "cookies"
-            result = (
-                await Profile.filter(guild_id=message.guild.id, cookies__gt=0)
-                .annotate(final_value=Sum("cookies"))
-                .order_by("-final_value")
-                .values("user_id", "final_value")
-            )
-            string = "Cookie leaderboard updates every 5 min\n\n"
-        else:
-            # qhar
-            return
+            case "Fast":
+                unit = "sec"
+                result = (
+                    await Profile.filter(guild_id=message.guild.id, time__lt=99999999999999)
+                    .annotate(final_value=Sum("time"))
+                    .order_by("final_value")
+                    .values("user_id", "final_value")
+                )
+            case "Slow":
+                unit = "h"
+                result = (
+                    await Profile.filter(guild_id=message.guild.id, timeslow__gt=0)
+                    .annotate(final_value=Sum("timeslow"))
+                    .order_by("-final_value")
+                    .values("user_id", "final_value")
+                )
+            case "Battlepass":
+                start_date = datetime.datetime(2024, 12, 1)
+                current_date = datetime.datetime.utcnow()
+                full_months_passed = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
+                if current_date.day < start_date.day:
+                    full_months_passed -= 1
+                result = (
+                    await Profile.filter(guild_id=message.guild.id, season=full_months_passed)
+                    .annotate(final_value=Sum("battlepass"))
+                    .order_by("-final_value", "progress")
+                    .values("user_id", "final_value", "progress")
+                )
+            case "Cookies":
+                unit = "cookies"
+                result = (
+                    await Profile.filter(guild_id=message.guild.id, cookies__gt=0)
+                    .annotate(final_value=Sum("cookies"))
+                    .order_by("-final_value")
+                    .values("user_id", "final_value")
+                )
+                string = "Cookie leaderboard updates every 5 min\n\n"
+            case _:
+                # qhar
+                return
 
         # find the placement of the person who ran the command and optionally the person who pressed the button
         interactor_placement = 0
@@ -6082,22 +6100,23 @@ async def leaderboards(
 
                 string += f"{current}. Level **{num}** *({prog_perc}%)*: <@{i['user_id']}>\n"
             else:
-                if type == "Slow":
-                    if num <= 0:
+                match type:
+                    case "Slow":
+                        if num <= 0:
+                            break
+                        num = round(num / 3600, 2)
+                    case "Cats" if num <= 0:
                         break
-                    num = round(num / 3600, 2)
-                elif type == "Cats" and num <= 0:
-                    break
-                elif type == "Value":
-                    if num <= 0:
+                    case "Value":
+                        if num <= 0:
+                            break
+                        num = round(num)
+                    case "Fast":
+                        if num >= 99999999999999:
+                            break
+                        num = round(num, 3)
+                    case "Cookies" if num <= 0:
                         break
-                    num = round(num)
-                elif type == "Fast":
-                    if num >= 99999999999999:
-                        break
-                    num = round(num, 3)
-                elif type == "Cookies" and num <= 0:
-                    break
                 string = string + f"{current}. {emoji} **{num:,}** {unit}: <@{i['user_id']}>\n"
 
             if message.user.id == i["user_id"] and current <= 5:
