@@ -1080,10 +1080,13 @@ async def cat_type_autocomplete(interaction: discord.Interaction, current: str) 
     return [discord.app_commands.Choice(name=choice, value=choice) for choice in [*cattypes, "Random"] if current.lower() in choice.lower()][:25]
 
 
-# extended autocomplete for /givecat that also includes server-specific currencies
+# extended autocomplete for /givecat that also includes server-specific currencies, packs, scratchcards, and prisms
 async def givecat_item_autocomplete(interaction: discord.Interaction, current: str) -> list[discord.app_commands.Choice[str]]:
     choices = [discord.app_commands.Choice(name=choice, value=choice) for choice in [*cattypes, "Random"] if current.lower() in choice.lower()]
-    extra = [("Cookies", "cookies"), ("Fish Coins", "fish coins"), ("Cat Dollars", "cat dollars")]
+    for pack in data.pack_data:
+        if current.lower() in pack["name"].lower() + " pack":
+            choices.append(discord.app_commands.Choice(name=f"{pack['name']} Pack", value=pack["name"].lower()))
+    extra = [("Scratchcards", "scratchcards"), ("Prism", "prism"), ("Cookies", "cookies"), ("Fish Coins", "fish coins"), ("Cat Dollars", "cat dollars")]
     for name, value in extra:
         if current.lower() in value:
             choices.append(discord.app_commands.Choice(name=name, value=value))
@@ -10952,6 +10955,63 @@ async def givecat(message: discord.Interaction, person_id: discord.User, cat_typ
         await user.save()
         await message.response.send_message(
             f"gave {person_id.mention} {amount:,} {plural(thing, amount)}",
+            allowed_mentions=discord.AllowedMentions(users=True),
+        )
+        return
+    if cat_type.lower() in [i["name"].lower() for i in data.pack_data]:
+        assert message.guild is not None
+        user = await Profile.get_or_create(guild_id=message.guild.id, user_id=person_id.id)
+        user[f"pack_{cat_type.lower()}"] += amount
+        await user.save()
+        await message.response.send_message(
+            f"gave {person_id.mention} {amount:,} {cat_type.capitalize()} {plural('Pack', amount)}",
+            allowed_mentions=discord.AllowedMentions(users=True),
+        )
+        return
+    if cat_type.lower() == "scratchcards":
+        assert message.guild is not None
+        user = await Profile.get_or_create(guild_id=message.guild.id, user_id=person_id.id)
+        user.scratchcards += amount
+        await user.save()
+        await message.response.send_message(
+            f"gave {person_id.mention} {amount:,} {plural('Scratchcard', amount)}",
+            allowed_mentions=discord.AllowedMentions(users=True),
+        )
+        return
+    if cat_type.lower() == "prism":
+        if amount <= 0:
+            await message.response.send_message("amount must be positive for prisms", ephemeral=True)
+            return
+        assert message.guild is not None
+        created = 0
+        for _ in range(amount):
+            if await Prism.count("guild_id = $1", message.guild.id) >= len(prism_names):
+                break
+            selected_name = None
+            for name in prism_names:
+                if not await Prism.get_or_none(guild_id=message.guild.id, name=name):
+                    selected_name = name
+                    break
+            if not selected_name:
+                break
+            if youngest_prism := await Prism.collect("guild_id = $1 ORDER BY time DESC LIMIT 1", message.guild.id):
+                selected_time = max(round(time.time()), youngest_prism[0].time + 1)
+            else:
+                selected_time = round(time.time())
+            await Prism.create(
+                guild_id=message.guild.id,
+                user_id=person_id.id,
+                creator=message.user.id,
+                time=selected_time,
+                name=selected_name,
+            )
+            created += 1
+        if created == 0:
+            await message.response.send_message("This server has reached the prism limit.", ephemeral=True)
+            return
+        suffix = "" if created == amount else f" (server limit reached after {created})"
+        await message.response.send_message(
+            f"gave {person_id.mention} {created:,} {plural('Prism', created)}{suffix}",
             allowed_mentions=discord.AllowedMentions(users=True),
         )
         return
