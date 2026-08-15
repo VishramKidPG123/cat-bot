@@ -1117,6 +1117,12 @@ async def gift_autocomplete(interaction: discord.Interaction, current: str) -> l
         choices.append(discord.app_commands.Choice(name=f"Rain ({actual_user.rain_minutes} {plural('minute', actual_user.rain_minutes)})", value="rain"))
     if current.lower() in "scratchcards" and user.scratchcards > 0:
         choices.append(discord.app_commands.Choice(name=f"Scratchcards (x{user.scratchcards})", value="scratchcards"))
+    if current.lower() in "cookies" and user.cookies > 0:
+        choices.append(discord.app_commands.Choice(name=f"Cookies (x{user.cookies:,})", value="cookies"))
+    if current.lower() in "fish coins" and user.fish_coins > 0:
+        choices.append(discord.app_commands.Choice(name=f"Fish Coins (x{user.fish_coins:,})", value="fish coins"))
+    if current.lower() in "cat dollars" and user.roulette_balance > 0:
+        choices.append(discord.app_commands.Choice(name=f"Cat Dollars (x{user.roulette_balance:,})", value="cat dollars"))
     for choice in data.pack_data:
         if user[f"pack_{choice['name'].lower()}"] > 0:
             pack_name = choice["name"]
@@ -7552,6 +7558,15 @@ async def gift(
         elif gift_type.lower() == "scratchcards":
             key = "scratchcards"
             thing = "Scratchcard"
+        elif gift_type.lower() == "cookies":
+            key = "cookies"
+            thing = "Cookie"
+        elif gift_type.lower() == "fish coins":
+            key = "fish_coins"
+            thing = "Fish Coin"
+        elif gift_type.lower() == "cat dollars":
+            key = "roulette_balance"
+            thing = "Cat Dollar"
         else:
             await message.response.send_message("bro what", ephemeral=True)
             return
