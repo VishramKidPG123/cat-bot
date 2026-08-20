@@ -175,6 +175,17 @@ allowedemojis = [i.lower() + "cat" for i in cattypes]
 pack_names = [i["name"] for i in data.pack_data]
 prism_names = [j + i for i in data.prism_names_end for j in data.prism_names_start]
 
+# server-specific currencies giftable/tradeable/give-able alongside cats (name -> Profile field, singular label, emoji)
+CURRENCIES = {
+    "cookies": {"field": "cookies", "label": "Cookie", "emoji": "🍪"},
+    "fish coins": {"field": "fish_coins", "label": "Fish Coin", "emoji": "🪙"},
+    "cat dollars": {"field": "roulette_balance", "label": "Cat Dollar", "emoji": "💰"},
+}
+
+
+def currency_attr(name: str) -> str:
+    return "gives_" + name.replace(" ", "_")
+
 config.filtered_errors = data.filtered_errors
 
 last_active_article = [k for k, v in enumerate(data.news_list) if v["active"]][-1]
@@ -988,7 +999,7 @@ async def givecat_item_autocomplete(interaction: discord.Interaction, current: s
     for pack in data.pack_data:
         if current.lower() in pack["name"].lower() + " pack":
             choices.append(discord.app_commands.Choice(name=f"{pack['name']} Pack", value=pack["name"].lower()))
-    extra = [("Scratchcards", "scratchcards"), ("Prism", "prism"), ("Cookies", "cookies"), ("Fish Coins", "fish coins"), ("Cat Dollars", "cat dollars")]
+    extra = [("Scratchcards", "scratchcards"), ("Prism", "prism")] + [(f"{info['label']}s", name) for name, info in CURRENCIES.items()]
     for name, value in extra:
         if current.lower() in value:
             choices.append(discord.app_commands.Choice(name=name, value=value))
@@ -1032,12 +1043,9 @@ async def gift_autocomplete(interaction: discord.Interaction, current: str) -> l
         choices.append(discord.app_commands.Choice(name=f"Rain ({actual_user.rain_minutes} {plural('minute', actual_user.rain_minutes)})", value="rain"))
     if current.lower() in "scratchcards" and user.scratchcards > 0:
         choices.append(discord.app_commands.Choice(name=f"Scratchcards (x{user.scratchcards})", value="scratchcards"))
-    if current.lower() in "cookies" and user.cookies > 0:
-        choices.append(discord.app_commands.Choice(name=f"Cookies (x{user.cookies:,})", value="cookies"))
-    if current.lower() in "fish coins" and user.fish_coins > 0:
-        choices.append(discord.app_commands.Choice(name=f"Fish Coins (x{user.fish_coins:,})", value="fish coins"))
-    if current.lower() in "cat dollars" and user.roulette_balance > 0:
-        choices.append(discord.app_commands.Choice(name=f"Cat Dollars (x{user.roulette_balance:,})", value="cat dollars"))
+    for name, info in CURRENCIES.items():
+        if current.lower() in name and user[info["field"]] > 0:
+            choices.append(discord.app_commands.Choice(name=f"{info['label']}s (x{user[info['field']]:,})", value=name))
     for choice in data.pack_data:
         if user[f"pack_{choice['name'].lower()}"] > 0:
             pack_name = choice["name"]
@@ -7121,15 +7129,9 @@ async def gift(
         elif gift_type.lower() == "scratchcards":
             key = "scratchcards"
             thing = "Scratchcard"
-        elif gift_type.lower() == "cookies":
-            key = "cookies"
-            thing = "Cookie"
-        elif gift_type.lower() == "fish coins":
-            key = "fish_coins"
-            thing = "Fish Coin"
-        elif gift_type.lower() == "cat dollars":
-            key = "roulette_balance"
-            thing = "Cat Dollar"
+        elif gift_type.lower() in CURRENCIES:
+            key = CURRENCIES[gift_type.lower()]["field"]
+            thing = CURRENCIES[gift_type.lower()]["label"]
         else:
             await message.response.send_message("bro what", ephemeral=True)
             return
@@ -7268,9 +7270,8 @@ async def trade(message: discord.Interaction, other_user: discord.User):
             self.gives_rain = 0
             self.gives_prisms = []
             self.gives_scratchcards = 0
-            self.gives_cookies = 0
-            self.gives_fish_coins = 0
-            self.gives_cat_dollars = 0
+            for currency_name in CURRENCIES:
+                setattr(self, currency_attr(currency_name), 0)
 
             if user.id == bot.user.id:
                 self.gives_cats["eGirl"] = 9999999
@@ -7364,12 +7365,9 @@ async def trade(message: discord.Interaction, other_user: discord.User):
                     fail = "You don't have enough rain!"
                 if user.profile.scratchcards < user.gives_scratchcards:
                     fail = "You don't have enough scratchcards!"
-                if user.profile.cookies < user.gives_cookies:
-                    fail = "You don't have enough cookies!"
-                if user.profile.fish_coins < user.gives_fish_coins:
-                    fail = "You don't have enough fish coins!"
-                if user.profile.roulette_balance < user.gives_cat_dollars:
-                    fail = "You don't have enough cat dollars!"
+                for currency_name, currency_info in CURRENCIES.items():
+                    if user.profile[currency_info["field"]] < getattr(user, currency_attr(currency_name)):
+                        fail = f"You don't have enough {currency_name}!"
                 for prism in user.gives_prisms:
                     if prism not in temp_prisms:
                         fail = f"Prism {prism} not found!"
@@ -7402,15 +7400,11 @@ async def trade(message: discord.Interaction, other_user: discord.User):
                 if giver.gives_scratchcards:
                     giver.profile.scratchcards -= giver.gives_scratchcards
                     getter.profile.scratchcards += giver.gives_scratchcards
-                if giver.gives_cookies:
-                    giver.profile.cookies -= giver.gives_cookies
-                    getter.profile.cookies += giver.gives_cookies
-                if giver.gives_fish_coins:
-                    giver.profile.fish_coins -= giver.gives_fish_coins
-                    getter.profile.fish_coins += giver.gives_fish_coins
-                if giver.gives_cat_dollars:
-                    giver.profile.roulette_balance -= giver.gives_cat_dollars
-                    getter.profile.roulette_balance += giver.gives_cat_dollars
+                for currency_name, currency_info in CURRENCIES.items():
+                    currency_amount = getattr(giver, currency_attr(currency_name))
+                    if currency_amount:
+                        giver.profile[currency_info["field"]] -= currency_amount
+                        getter.profile[currency_info["field"]] += currency_amount
                 for prism in giver.gives_prisms:
                     temp_prisms[prism].user_id = getter.user.id
 
@@ -7560,7 +7554,7 @@ async def trade(message: discord.Interaction, other_user: discord.User):
                             return
 
                         active_user.gives_rain += amount
-                    case "cookies":
+                    case "cookies" | "fish coins" | "cat dollars":
                         assert isinstance(item2, discord.ui.TextInput)
                         amount = parse_trade_amount(item2.value)
                         if amount is None:
@@ -7569,42 +7563,14 @@ async def trade(message: discord.Interaction, other_user: discord.User):
 
                         await active_user.profile.refresh_from_db()
 
-                        current = active_user.gives_cookies
-                        amount = await resolve_trade_delta(current, active_user.profile.cookies, amount, "cookies", interaction2)
+                        currency_field = CURRENCIES[selection]["field"]
+                        currency_gives_attr = currency_attr(selection)
+                        current = getattr(active_user, currency_gives_attr)
+                        amount = await resolve_trade_delta(current, active_user.profile[currency_field], amount, selection, interaction2)
                         if amount is None:
                             return
 
-                        active_user.gives_cookies += amount
-                    case "fish coins":
-                        assert isinstance(item2, discord.ui.TextInput)
-                        amount = parse_trade_amount(item2.value)
-                        if amount is None:
-                            await interaction2.response.send_message("Amount must be an integer!", ephemeral=True)
-                            return
-
-                        await active_user.profile.refresh_from_db()
-
-                        current = active_user.gives_fish_coins
-                        amount = await resolve_trade_delta(current, active_user.profile.fish_coins, amount, "fish coins", interaction2)
-                        if amount is None:
-                            return
-
-                        active_user.gives_fish_coins += amount
-                    case "cat dollars":
-                        assert isinstance(item2, discord.ui.TextInput)
-                        amount = parse_trade_amount(item2.value)
-                        if amount is None:
-                            await interaction2.response.send_message("Amount must be an integer!", ephemeral=True)
-                            return
-
-                        await active_user.profile.refresh_from_db()
-
-                        current = active_user.gives_cat_dollars
-                        amount = await resolve_trade_delta(current, active_user.profile.roulette_balance, amount, "cat dollars", interaction2)
-                        if amount is None:
-                            return
-
-                        active_user.gives_cat_dollars += amount
+                        setattr(active_user, currency_gives_attr, current + amount)
                     case "prisms":
                         if isinstance(item1, discord.ui.Select):
                             prism_name = item1.values[0].title()
@@ -7717,40 +7683,18 @@ async def trade(message: discord.Interaction, other_user: discord.User):
                             text="Rain Minutes", component=discord.ui.TextInput(placeholder=f"Max: {active_user.global_user.rain_minutes}", min_length=1, id=69)
                         )
                     )
-                case "cookies":
-                    modal = Modal(title="Offer cookies...")
+                case "cookies" | "fish coins" | "cat dollars":
+                    modal = Modal(title=f"Offer {selection}...")
                     await active_user.profile.refresh_from_db()
-                    if active_user.profile.cookies == 0:
-                        await interaction.response.send_message("You don't have any cookies to offer!", ephemeral=True)
+                    currency_field = CURRENCIES[selection]["field"]
+                    currency_balance = active_user.profile[currency_field]
+                    if currency_balance <= 0:
+                        await interaction.response.send_message(f"You don't have any {selection} to offer!", ephemeral=True)
                         return
                     modal.add_item(
                         discord.ui.Label(
                             text="Amount",
-                            component=discord.ui.TextInput(placeholder=f"Max: {active_user.profile.cookies:,}", min_length=1, id=69),
-                        )
-                    )
-                case "fish coins":
-                    modal = Modal(title="Offer fish coins...")
-                    await active_user.profile.refresh_from_db()
-                    if active_user.profile.fish_coins == 0:
-                        await interaction.response.send_message("You don't have any fish coins to offer!", ephemeral=True)
-                        return
-                    modal.add_item(
-                        discord.ui.Label(
-                            text="Amount",
-                            component=discord.ui.TextInput(placeholder=f"Max: {active_user.profile.fish_coins:,}", min_length=1, id=69),
-                        )
-                    )
-                case "cat dollars":
-                    modal = Modal(title="Offer cat dollars...")
-                    await active_user.profile.refresh_from_db()
-                    if active_user.profile.roulette_balance <= 0:
-                        await interaction.response.send_message("You don't have any cat dollars to offer!", ephemeral=True)
-                        return
-                    modal.add_item(
-                        discord.ui.Label(
-                            text="Amount",
-                            component=discord.ui.TextInput(placeholder=f"Max: {active_user.profile.roulette_balance:,}", min_length=1, id=69),
+                            component=discord.ui.TextInput(placeholder=f"Max: {currency_balance:,}", min_length=1, id=69),
                         )
                     )
                 case "prisms":
@@ -7788,9 +7732,9 @@ async def trade(message: discord.Interaction, other_user: discord.User):
             discord.SelectOption(label="Prisms", emoji=get_emoji("prism"), value="prisms"),
             discord.SelectOption(label="Scratchcards", emoji="🍀", value="scratchcards"),
             discord.SelectOption(label="Rain", emoji="☔", value="rain"),
-            discord.SelectOption(label="Cookies", emoji="🍪", value="cookies"),
-            discord.SelectOption(label="Fish Coins", emoji="🪙", value="fish coins"),
-            discord.SelectOption(label="Cat Dollars", emoji="💰", value="cat dollars"),
+        ] + [
+            discord.SelectOption(label=f"{currency_info['label']}s", emoji=currency_info["emoji"], value=currency_name)
+            for currency_name, currency_info in CURRENCIES.items()
         ]
 
         select = discord.ui.Select(placeholder="Offer...", options=options)
@@ -7823,14 +7767,10 @@ async def trade(message: discord.Interaction, other_user: discord.User):
             if tradeuser.gives_scratchcards:
                 offer_string += f"🍀 {tradeuser.gives_scratchcards:,} scratchcards\n"
 
-            if tradeuser.gives_cookies:
-                offer_string += f"🍪 {tradeuser.gives_cookies:,} {plural('cookie', tradeuser.gives_cookies)}\n"
-
-            if tradeuser.gives_fish_coins:
-                offer_string += f"🪙 {tradeuser.gives_fish_coins:,} fish coins\n"
-
-            if tradeuser.gives_cat_dollars:
-                offer_string += f"💰 {tradeuser.gives_cat_dollars:,} cat {plural('dollar', tradeuser.gives_cat_dollars)}\n"
+            for currency_name, currency_info in CURRENCIES.items():
+                currency_amount = getattr(tradeuser, currency_attr(currency_name))
+                if currency_amount:
+                    offer_string += f"{currency_info['emoji']} {currency_amount:,} {plural(currency_info['label'].lower(), currency_amount)}\n"
 
             if tradeuser.gives_rain:
                 offer_string += f"☔ {tradeuser.gives_rain:,}m of Cat Rains\\*\n"
@@ -10567,15 +10507,14 @@ async def leaderboards(
 async def givecat(message: discord.Interaction, person_id: discord.User, cat_type: str, amount: int | None = None):
     if amount is None:
         amount = 1
-    _extra_items = {"cookies": ("cookies", "Cookie"), "fish coins": ("fish_coins", "Fish Coin"), "cat dollars": ("roulette_balance", "Cat Dollar")}
-    if cat_type in _extra_items:
+    if cat_type in CURRENCIES:
         assert message.guild is not None
         user = await Profile.get_or_create(guild_id=message.guild.id, user_id=person_id.id)
-        key, thing = _extra_items[cat_type]
-        user[key] += amount
+        info = CURRENCIES[cat_type]
+        user[info["field"]] += amount
         await user.save()
         await message.response.send_message(
-            f"gave {person_id.mention} {amount:,} {plural(thing, amount)}",
+            f"gave {person_id.mention} {amount:,} {plural(info['label'], amount)}",
             allowed_mentions=discord.AllowedMentions(users=True),
         )
         return
