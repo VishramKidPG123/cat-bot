@@ -43,7 +43,6 @@ SPAWN_EMOJI_THEMES = {
     "birthday": False,
     "halloween": False,
     "old": False,
-    "fish": False,
 }
 
 
