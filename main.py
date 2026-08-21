@@ -10079,16 +10079,14 @@ async def leaderboards(
         # leaderboard top amount
         show_amount = 15
 
-        async def fetch_ranked(query: str, order_by: str, ahead_of: str, *args) -> list:
+        async def fetch_ranked(query: str, order_by: str, *args) -> list:
+            # RANK() ranks only by order_by's own columns (never user_id), so tied rows share a
+            # placement - user_id is only used as a secondary sort for stable, deterministic
+            # iteration order among ties, it never affects the placement number itself
             user_parameter = len(args) + 1
-            top_query = f"SELECT * FROM ({query}) AS leaderboard ORDER BY {order_by} LIMIT ${user_parameter}"
-            rank_query = f"""
-                SELECT target.*, 1 + (
-                    SELECT COUNT(*) FROM ({query}) AS entry WHERE {ahead_of}
-                ) AS placement
-                FROM ({query}) AS target
-                WHERE target.user_id = ${user_parameter}
-            """
+            ranked = f"SELECT *, RANK() OVER (ORDER BY {order_by}) AS placement FROM ({query}) AS leaderboard"
+            top_query = f"SELECT * FROM ({ranked}) AS ranked ORDER BY placement ASC, user_id ASC LIMIT ${user_parameter}"
+            rank_query = f"SELECT * FROM ({ranked}) AS ranked WHERE user_id = ${user_parameter}"
             if interaction.user.id == message.user.id:
                 top_rows, interaction_row = await asyncio.gather(
                     _get_pool().fetch(top_query, *args, show_amount),
@@ -10119,8 +10117,7 @@ async def leaderboards(
                 if specific_cat != "All":
                     result = await fetch_ranked(
                         f'SELECT user_id, "cat_{specific_cat}", cat_auras FROM profile WHERE guild_id = $1 AND "cat_{specific_cat}" > 0',
-                        f'"cat_{specific_cat}" DESC, user_id ASC',
-                        f'(entry."cat_{specific_cat}" > target."cat_{specific_cat}") OR (entry."cat_{specific_cat}" = target."cat_{specific_cat}" AND entry.user_id < target.user_id)',
+                        f'"cat_{specific_cat}" DESC',
                         message.guild.id,
                     )
                     final_value = f"cat_{specific_cat}"
@@ -10130,8 +10127,7 @@ async def leaderboards(
                     sum_expression = RawSQL("(" + " + ".join(cat_columns) + ") AS final_value")
                     result = await fetch_ranked(
                         f"SELECT user_id, {sum_expression} FROM profile WHERE guild_id = $1",
-                        "final_value DESC, user_id ASC",
-                        "(entry.final_value > target.final_value) OR (entry.final_value = target.final_value AND entry.user_id < target.user_id)",
+                        "final_value DESC",
                         message.guild.id,
                     )
                     final_value = "final_value"
@@ -10163,8 +10159,7 @@ async def leaderboards(
                 total_sum_expr = RawSQL("(" + " + ".join(sums) + ") AS final_value")
                 result = await fetch_ranked(
                     f"SELECT user_id, {total_sum_expr} FROM profile WHERE guild_id = $1",
-                    "final_value DESC, user_id ASC",
-                    "(entry.final_value > target.final_value) OR (entry.final_value = target.final_value AND entry.user_id < target.user_id)",
+                    "final_value DESC",
                     message.guild.id,
                 )
                 final_value = "final_value"
@@ -10172,8 +10167,7 @@ async def leaderboards(
                 unit = "sec"
                 result = await fetch_ranked(
                     "SELECT user_id, time FROM profile WHERE guild_id = $1 AND time < 99999999999999",
-                    "time ASC, user_id ASC",
-                    "(entry.time < target.time) OR (entry.time = target.time AND entry.user_id < target.user_id)",
+                    "time ASC",
                     message.guild.id,
                 )
                 final_value = "time"
@@ -10181,8 +10175,7 @@ async def leaderboards(
                 unit = "h"
                 result = await fetch_ranked(
                     "SELECT user_id, timeslow FROM profile WHERE guild_id = $1 AND timeslow > 0",
-                    "timeslow DESC, user_id ASC",
-                    "(entry.timeslow > target.timeslow) OR (entry.timeslow = target.timeslow AND entry.user_id < target.user_id)",
+                    "timeslow DESC",
                     message.guild.id,
                 )
                 final_value = "timeslow"
@@ -10195,8 +10188,7 @@ async def leaderboards(
                     full_months_passed -= 1
                 result = await fetch_ranked(
                     "SELECT user_id, battlepass, progress FROM profile WHERE guild_id = $1 AND season = $2 AND (battlepass > 0 OR progress > 0)",
-                    "battlepass DESC, progress DESC, user_id ASC",
-                    "(entry.battlepass > target.battlepass) OR (entry.battlepass = target.battlepass AND entry.progress > target.progress) OR (entry.battlepass = target.battlepass AND entry.progress = target.progress AND entry.user_id < target.user_id)",
+                    "battlepass DESC, progress DESC",
                     message.guild.id,
                     full_months_passed,
                 )
@@ -10205,8 +10197,7 @@ async def leaderboards(
                 unit = "cookies"
                 result = await fetch_ranked(
                     "SELECT user_id, cookies FROM profile WHERE guild_id = $1 AND cookies > 0",
-                    "cookies DESC, user_id ASC",
-                    "(entry.cookies > target.cookies) OR (entry.cookies = target.cookies AND entry.user_id < target.user_id)",
+                    "cookies DESC",
                     message.guild.id,
                 )
                 final_value = "cookies"
@@ -10214,8 +10205,7 @@ async def leaderboards(
                 unit = "score"
                 result = await fetch_ranked(
                     "SELECT user_id, best_pig_score FROM profile WHERE guild_id = $1 AND best_pig_score > 0",
-                    "best_pig_score DESC, user_id ASC",
-                    "(entry.best_pig_score > target.best_pig_score) OR (entry.best_pig_score = target.best_pig_score AND entry.user_id < target.user_id)",
+                    "best_pig_score DESC",
                     message.guild.id,
                 )
                 final_value = "best_pig_score"
@@ -10223,8 +10213,7 @@ async def leaderboards(
                 unit = "cat dollars"
                 result = await fetch_ranked(
                     "SELECT user_id, roulette_balance FROM profile WHERE guild_id = $1 AND roulette_balance != 100",
-                    "roulette_balance DESC, user_id ASC",
-                    "(entry.roulette_balance > target.roulette_balance) OR (entry.roulette_balance = target.roulette_balance AND entry.user_id < target.user_id)",
+                    "roulette_balance DESC",
                     message.guild.id,
                 )
                 final_value = "roulette_balance"
@@ -10232,8 +10221,7 @@ async def leaderboards(
                 unit = "prisms"
                 result = await fetch_ranked(
                     "SELECT user_id, COUNT(*) AS prism_count FROM prism WHERE guild_id = $1 GROUP BY user_id",
-                    "prism_count DESC, user_id ASC",
-                    "(entry.prism_count > target.prism_count) OR (entry.prism_count = target.prism_count AND entry.user_id < target.user_id)",
+                    "prism_count DESC",
                     message.guild.id,
                 )
                 final_value = "prism_count"
@@ -10241,8 +10229,7 @@ async def leaderboards(
                 unit = "fishes"
                 result = await fetch_ranked(
                     "SELECT user_id, fish_caught FROM profile WHERE guild_id = $1 AND fish_caught != 0",
-                    "fish_caught DESC, user_id ASC",
-                    "(entry.fish_caught > target.fish_caught) OR (entry.fish_caught = target.fish_caught AND entry.user_id < target.user_id)",
+                    "fish_caught DESC",
                     message.guild.id,
                 )
                 final_value = "fish_caught"
@@ -10250,20 +10237,24 @@ async def leaderboards(
                 unit = "auras"
                 if specific_cat in AURA_ORDER:
                     _a = specific_cat
-                    _count_expr = RawSQL(f"(SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{_a}') AS aura_count")
+                    _count_sql = f"(SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{_a}')"
+                    _count_expr = RawSQL(f"{_count_sql} AS aura_count")
+                    _placement_expr = RawSQL(f"RANK() OVER (ORDER BY {_count_sql} DESC) AS placement")
                     result = await Profile.collect_limit(
-                        ["user_id", _count_expr],
-                        f"guild_id = $1 AND (SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{_a}') > 0 ORDER BY aura_count DESC, user_id ASC",
+                        ["user_id", _count_expr, _placement_expr],
+                        f"guild_id = $1 AND {_count_sql} > 0 ORDER BY aura_count DESC, user_id ASC",
                         message.guild.id,
                     )
                     final_value = "aura_count"
                 else:
-                    _count_exprs = [RawSQL(f"(SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{a}') AS count_{a}") for a in AURA_ORDER]
-                    _total_expr = RawSQL(
-                        "(" + " + ".join(f"(SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{a}')" for a in AURA_ORDER) + ") AS aura_total"
+                    _count_sqls = {a: f"(SELECT COUNT(*) FROM unnest(cat_auras) v WHERE v = '{a}')" for a in AURA_ORDER}
+                    _count_exprs = [RawSQL(f"{_count_sqls[a]} AS count_{a}") for a in AURA_ORDER]
+                    _total_expr = RawSQL("(" + " + ".join(_count_sqls.values()) + ") AS aura_total")
+                    _placement_expr = RawSQL(
+                        "RANK() OVER (ORDER BY " + ", ".join(f"{_count_sqls[a]} DESC" for a in AURA_ORDER) + ") AS placement"
                     )
                     result = await Profile.collect_limit(
-                        ["user_id", *_count_exprs, _total_expr],
+                        ["user_id", *_count_exprs, _total_expr, _placement_expr],
                         "guild_id = $1 AND EXISTS (SELECT 1 FROM unnest(cat_auras) v WHERE v != ' ') ORDER BY count_r DESC, count_a DESC, count_p DESC, count_c DESC, count_y DESC, user_id ASC",
                         message.guild.id,
                     )
@@ -10337,11 +10328,10 @@ async def leaderboards(
 
         emoji = ""
 
-        # the little place counter
-        current = 1
         leader = False
         for i in result[:show_amount]:
             num = i[final_value]
+            current = i["placement"]
 
             if type == "Cattlepass":
                 assert bp_season is not None
@@ -10394,7 +10384,6 @@ async def leaderboards(
 
             if message.user.id == i["user_id"] and current <= 5:
                 leader = True
-            current += 1
 
         if type == "Cats" and specific_cat != "All":
             emoji = get_emoji(f"{specific_cat.lower()}cat")
